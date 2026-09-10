@@ -41,6 +41,7 @@
   let viewOffsetX = 0;
   let viewOffsetY = 0;
   let compactPortrait = false;
+  let logicalFrameHeight = H;
 
   const glass = new Image(); glass.decoding = 'async'; glass.src = 'assets/glass-user-transparent.png';
   const waterGlass = new Image(); waterGlass.decoding = 'async'; waterGlass.src = 'assets/glass-water-clean.png';
@@ -57,11 +58,12 @@
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
     compactPortrait = rect.height > rect.width * 1.15;
-    viewScale = compactPortrait ? rect.width / 480 : Math.min(rect.width / W, rect.height / H);
+    logicalFrameHeight = compactPortrait ? 940 : H;
+    viewScale = compactPortrait
+      ? Math.min(rect.width / 480, rect.height / logicalFrameHeight)
+      : Math.min(rect.width / W, rect.height / H);
     viewOffsetX = (rect.width - W * viewScale) / 2;
-    viewOffsetY = compactPortrait
-      ? Math.max(16, (rect.height - H * viewScale) * .22)
-      : (rect.height - H * viewScale) / 2;
+    viewOffsetY = (rect.height - logicalFrameHeight * viewScale) / 2;
     ctx.setTransform(viewScale * dpr, 0, 0, viewScale * dpr, viewOffsetX * dpr, viewOffsetY * dpr);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -76,9 +78,9 @@
       };
     }
     return {
-      scoreX: 265, scoreY: 12, controlsY: 84,
-      controls: [{ x: 265, width: 100 }, { x: 375, width: 78 }, { x: 463, width: 64 }],
-      analysisX: 265, analysisY: 128, tabX: 440, tabY: 128,
+      scoreX: 374, scoreY: 690, controlsY: 758,
+      controls: [{ x: 369, width: 100 }, { x: 479, width: 78 }, { x: 567, width: 64 }],
+      analysisX: 330, analysisY: 806, tabX: 505, tabY: 806,
     };
   }
 
@@ -145,10 +147,10 @@
   function drawBackground() {
     const bg = ctx.createRadialGradient(500, 275, 20, 500, 330, 650);
     bg.addColorStop(0, '#1b3b38'); bg.addColorStop(.45, '#0d2425'); bg.addColorStop(1, '#050e11');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, logicalFrameHeight);
     const glow = ctx.createRadialGradient(500, 355, 5, 500, 355, 270);
     glow.addColorStop(0, 'rgba(208,255,211,.17)'); glow.addColorStop(.55, 'rgba(131,235,200,.045)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, logicalFrameHeight);
   }
 
   function drawCoin(coin, size = coinSize) {
@@ -322,7 +324,8 @@
       ctx.save(); ctx.translate(scoreX + 127, scoreY + 30); ctx.scale(scale, scale); ctx.translate(-(scoreX + 127), -(scoreY + 30));
       ctx.shadowColor = '#f4cf61'; ctx.shadowBlur = 20 * successPulse;
       ctx.fillStyle = '#fff0a8'; ctx.font = '900 23px system-ui, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText(`+1  100円 ON!`, scoreX + 127, scoreY + 87); ctx.textAlign = 'left'; ctx.restore();
+      const pulseY = compactPortrait ? scoreY - 12 : scoreY + 87;
+      ctx.fillText(`+1  100円 ON!`, scoreX + 127, pulseY); ctx.textAlign = 'left'; ctx.restore();
     }
     const controls = layout.controls.map((control, i) => ({
       ...control,
@@ -340,16 +343,18 @@
 
     if (status === 'holding') {
       const w = 180; const progress = holdTime / 3;
-      ctx.fillStyle = 'rgba(2,11,13,.68)'; ctx.beginPath(); ctx.roundRect(410, 28, w, 34, 17); ctx.fill();
+      const holdY = compactPortrait ? 642 : 28;
+      ctx.fillStyle = 'rgba(2,11,13,.68)'; ctx.beginPath(); ctx.roundRect(410, holdY, w, 34, 17); ctx.fill();
       ctx.fillStyle = '#eafdf3'; ctx.font = '700 13px system-ui, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText(`${Math.max(0, 3 - holdTime).toFixed(1)} 秒キープ！`, 500, 50); ctx.textAlign = 'left';
-      ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(420, 65, 160, 4);
-      ctx.fillStyle = '#e5c36c'; ctx.fillRect(420, 65, 160 * Math.max(0, Math.min(1, progress)), 4);
+      ctx.fillText(`${Math.max(0, 3 - holdTime).toFixed(1)} 秒キープ！`, 500, holdY + 22); ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(420, holdY + 37, 160, 4);
+      ctx.fillStyle = '#e5c36c'; ctx.fillRect(420, holdY + 37, 160 * Math.max(0, Math.min(1, progress)), 4);
     }
     if (toast && time < toastUntil) {
+      const toastY = compactPortrait ? 886 : 635;
       ctx.globalAlpha = Math.min(1, (toastUntil - time) * 1.4);
-      ctx.fillStyle = 'rgba(3,12,14,.76)'; ctx.beginPath(); ctx.roundRect(300, 635, 400, 38, 19); ctx.fill();
-      ctx.fillStyle = '#f2fff9'; ctx.font = '600 14px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(toast, 500, 660); ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(3,12,14,.76)'; ctx.beginPath(); ctx.roundRect(300, toastY, 400, 38, 19); ctx.fill();
+      ctx.fillStyle = '#f2fff9'; ctx.font = '600 14px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(toast, 500, toastY + 25); ctx.textAlign = 'left';
     }
     ctx.restore();
   }
@@ -390,8 +395,10 @@
     ctx.strokeStyle = 'rgba(239, 255, 158, .82)'; ctx.fillStyle = 'rgba(245, 255, 160, .12)'; ctx.lineWidth = 2.2; ctx.setLineDash([3, 5]);
     ctx.beginPath(); ctx.ellipse(target.x, target.y, displayRadius, displayRadius * .68, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.setLineDash([]); ctx.fillStyle = 'rgba(255,249,183,.95)'; ctx.beginPath(); ctx.arc(target.x, target.y, 4.2, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(225,255,239,.68)'; ctx.font = '600 10px system-ui, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('浮力中心', target.x, target.y - target.radius - 8); ctx.textAlign = 'left';
+    if (!compactPortrait) {
+      ctx.fillStyle = 'rgba(225,255,239,.68)'; ctx.font = '600 10px system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('浮力中心', target.x, target.y - target.radius - 8); ctx.textAlign = 'left';
+    }
 
     ctx.fillStyle = 'rgba(2,11,13,.58)'; ctx.strokeStyle = 'rgba(226,255,240,.16)';
     ctx.beginPath(); ctx.roundRect(analysisX, analysisY, 165, 58, 12); ctx.fill(); ctx.stroke();
@@ -531,7 +538,7 @@
 
   function render(stamp) {
     const dt = Math.min(.05, Math.max(0, (stamp - previous) / 1000 || 0)); previous = stamp; time += dt; update(dt);
-    ctx.clearRect(0, 0, W, H); drawBackground(); drawGlass();
+    ctx.clearRect(0, 0, W, logicalFrameHeight); drawBackground(); drawGlass();
     ctx.save(); bowlPath(); ctx.clip(); bottomCoins.forEach((coin) => drawCoin(coin, coin.size)); ctx.restore();
     drawLemon();
     ctx.save(); bowlPath(); ctx.clip(); drawFallingBottomCoins(); drawBottomBubbleBursts(); ctx.restore();
