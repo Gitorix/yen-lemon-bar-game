@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+node scripts/check-security.mjs
+node scripts/build.mjs

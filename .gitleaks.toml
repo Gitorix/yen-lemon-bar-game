@@ -1,0 +1,10 @@
+title = "100-yen Lemon secret detection"
+[extend]
+useDefault = true
+
+[[rules]]
+id = "sites-source-credential"
+description = "Sites source repository credential"
+regex = '''\bart_v2_[A-Za-z0-9_\-]{20,}\b'''
+keywords = ["art_v2_"]
+
